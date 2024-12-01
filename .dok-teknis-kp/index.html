@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumen Teknis - Fitur Tambah Versi - Clara Isra Syamdah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const navLinks = document.querySelectorAll('nav a');
+      const sections = document.querySelectorAll('main section');
+      
+      window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop - 70;
+          if (window.scrollY >= sectionTop) {
+            current = section.getAttribute('id');
+          }
+        });
+        navLinks.forEach(link => {
+          link.classList.remove('font-bold', 'underline');
+          if (link.getAttribute('href').substring(1) === current) {
+            link.classList.add('font-bold', 'underline');
+          }
+        });
+      });
+    });
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans">
+  <header class="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-6">
+    <div class="container mx-auto text-center">
+      <h1 class="text-4xl font-extrabold">Dokumen Teknis</h1>
+      <p class="text-lg mt-2">Fitur "Tambah Versi" - SPTJM Online</p>
+      <p class="text-lg mt-2">1301213177 - Clara Isra Syamdah</p>
+    </div>
+  </header>
+
+  <nav class="bg-blue-800 text-white py-3 sticky top-0 z-10 shadow">
+    <div class="container mx-auto">
+      <ul class="flex justify-center space-x-6">
+        <li><a href="#pendahuluan" class="hover:underline">Pendahuluan</a></li>
+        <li><a href="#alur-kerja" class="hover:underline">Alur Kerja</a></li>
+        <li><a href="#rancangan-teknis" class="hover:underline">Rancangan Teknis</a></li>
+        <li><a href="#kode-program" class="hover:underline">Kode Program</a></li>
+        <li><a href="#pengujian" class="hover:underline">Pengujian</a></li>
+        <li><a href="#kesimpulan" class="hover:underline">Kesimpulan</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container mx-auto my-8 p-8 bg-white rounded shadow-lg">
+    <section id="pendahuluan" class="mb-8">
+      <h3 class="text-3xl font-semibold mb-4">Pendahuluan</h3>
+      <p>Fitur "Tambah Versi" bertujuan untuk mempermudah pengelolaan data keuangan pada sistem SPTJM Online, memungkinkan pengguna untuk membuat versi baru data keuangan dan memastikan data yang sudah ada tidak terganggu. Fitur ini mendukung pencatatan data keuangan berdasarkan tahun tertentu, serta memungkinkan penyalinan data dari tahun sebelumnya dengan pengaturan nilai yang sesuai dengan aturan yang telah ditentukan.</p>
+    </section>
+
+    <section id="alur-kerja" class="mb-8">
+      <h3 class="text-3xl font-semibold mb-4">Alur Kerja</h3>
+      <ol class="list-decimal ml-6 space-y-3">
+        <li>Pengguna memilih tahun sumber dan tahun target.</li>
+        <li>Sistem memvalidasi input untuk memastikan bahwa data dapat diproses dengan benar.</li>
+        <li>Sistem membuat tabel baru untuk tahun target dan menyalin data dari tabel tahun sumber.</li>
+        <li>Kolom tertentu dalam tabel tahun target dikosongkan sesuai dengan aturan yang diterapkan.</li>
+      </ol>
+    </section>
+
+    <section id="rancangan-teknis" class="mb-8">
+      <h3 class="text-3xl font-semibold mb-4">Rancangan Teknis</h3>
+      <p>Langkah-langkah dalam fitur ini secara teknis melibatkan:</p>
+      <ul class="list-disc ml-6 space-y-3">
+        <li>Pembuatan tabel baru menggunakan query SQL:</li>
+        <pre class="bg-gray-100 p-3 rounded shadow"><code>CREATE TABLE keuangan2024 LIKE keuangan2023;</code></pre>
+        <li>Penyalinan data dari tabel sumber:</li>
+        <pre class="bg-gray-100 p-3 rounded shadow"><code>INSERT INTO keuangan2024 SELECT * FROM keuangan2023;</code></pre>
+        <li>Mengosongkan data dalam kolom tertentu sesuai aturan yang diterapkan:</li>
+        <pre class="bg-gray-100 p-3 rounded shadow"><code>UPDATE keuangan2024 SET Jan = NULL, Feb = NULL, ..., Des = NULL;</code></pre>
+        <li>Melakukan pembaruan kolom berdasarkan data yang ada di tabel keuangan2024 dan keuangan2023:</li>
+        <pre class="bg-gray-100 p-3 rounded shadow"><code>UPDATE keuangan2024 SET NPWP = keuangan2023.NPWP, No_Rek = keuangan2023.No_Rek WHERE keuangan2024.NIDN = keuangan2023.NIDN;</code></pre>
+        <li>Setelah itu, melakukan update untuk kolom lainnya yang belum terisi:</li>
+        <pre class="bg-gray-100 p-3 rounded shadow"><code>UPDATE keuangan2024 SET Nama_Pegawai = keuangan2023.Nama_Pegawai WHERE keuangan2024.NIDN = keuangan2023.NIDN;</code></pre>
+      </ul>
+    </section>
+    
+
+    <section id="kode-program" class="mb-8">
+      <h3 class="text-3xl font-semibold mb-4">Kode Program</h3>
+      <pre class="bg-gray-100 p-4 rounded shadow overflow-auto">
+<code>
+<?php
+  $tahunSumber = '2023';
+  $tahunTarget = '2024';
+
+  if (!$con->query("CREATE TABLE keuangan{$tahunTarget} LIKE keuangan{$tahunSumber}")) {
+    exit("Gagal membuat tabel: " . $con->error);
+  }
+
+  if (!$con->query("INSERT INTO keuangan{$tahunTarget} SELECT * FROM keuangan{$tahunSumber}")) {
+    exit("Gagal menyalin data: " . $con->error);
+  }
+
+  $kolomBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  foreach ($kolomBulan as $bulan) {
+    $con->query("UPDATE keuangan{$tahunTarget} SET $bulan = NULL");
+  }
+?>
+</code>
+      </pre>
+    </section>
+
+    <section id="pengujian" class="mb-8">
+      <h3 class="text-3xl font-semibold mb-4">Pengujian</h3>
+      <table class="table-auto w-full border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border px-4 py-2">Skenario Pengujian</th>
+            <th class="border px-4 py-2">Hasil yang Diharapkan</th>
+            <th class="border px-4 py-2">Hasil yang Diperoleh</th>
+            <th class="border px-4 py-2">Catatan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border px-4 py-2">Pengisian Informasi Versi untuk ditambahkan</td>
+            <td class="border px-4 py-2">Formulir terisi dengan benar</td>
+            <td class="border px-4 py-2">Berhasil, data terbaca dengan baik</td>
+            <td class="border px-4 py-2">-</td>
+          </tr>
+          <tr>
+            <td class="border px-4 py-2">Memberikan informasi Proses Pembuatan Versi sedang berlangsung</td>
+            <td class="border px-4 py-2">Menampilkan Loading Progres Indikator</td>
+            <td class="border px-4 py-2">Berhasil, menampilkan Progres Indikator dengan baik</td>
+            <td class="border px-4 py-2">-</td>
+          </tr>
+          <tr>
+            <td class="border px-4 py-2">Menampilkan Informasi Keberhasilan Pembuatan Versi</td>
+            <td class="border px-4 py-2">Menampilkan sebuah “Modal” berisi detail dari hasil pembuatan Versi, dan tabel baru terbentuk pada database</td>
+            <td class="border px-4 py-2">Berhasil, informasi detail dari apa saja dari hasil pembuatan Versi, dan tabel baru berhasil terbentuk di database</td>
+            <td class="border px-4 py-2">-</td>
+          </tr>
+          <tr>
+            <td class="border px-4 py-2">Proses Mengaktfikan atau penonaktifkan Versi yang telah ada</td>
+            <td class="border px-4 py-2">Versi dapat dinonaktifkan dan diaktifkan dengan baik</td>
+            <td class="border px-4 py-2">Berhasil, versi dapat diaktfikan dan dinonaktifkan dengan baik</td>
+            <td class="border px-4 py-2">-</td>
+          </tr>
+          <tr>
+            <td class="border px-4 py-2">Penghapusan data versi yang telah tidak diperlukan</td>
+            <td class="border px-4 py-2">Data dapat dihapus dengan sempurna</td>
+            <td class="border px-4 py-2">Berhasil, data versi yang dihapus tidak muncul pada database</td>
+            <td class="border px-4 py-2">Buat UX untuk mencegah penghapusan database yang tidak disengaja</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="kesimpulan">
+      <h3 class="text-3xl font-semibold mb-4">Kesimpulan</h3>
+      <p>Fitur "Tambah Versi" telah berhasil diimplementasikan dengan baik pada aplikasi SPTJM Online. Pengujian menunjukkan bahwa fitur ini dapat menangani proses pembuatan, pengelolaan, dan penghapusan versi data keuangan dengan lancar. Sistem mampu menangani data keuangan dalam jumlah besar dengan tetap menjaga integritas data yang ada.</p>
+    </section>
+  </main>
+
+  <footer class="bg-blue-800 text-white py-6 text-center">
+    <p>&copy; 2024 LLDIKTI4 - Clara Isra Syamdah</p>
+  </footer>
+</body>
+
+</html>
